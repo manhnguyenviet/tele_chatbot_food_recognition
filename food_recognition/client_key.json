@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "herv-ai-1688377829094",
+    "private_key_id": "e52fbfbb03957474bf9666f9efe9c2700562b39e",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDcipjJgVJJKJ4z\n+VYLKWtJFnJkiyryyt4lpv3K+0tnN0yg6JvzDscqA4brt8qrL7uKRxNcpePYn0IW\nvDPDRlLDuh4bWccuS2i26dU7FsnfmRJZcmXBiCT1lEgaBJbqi34+M2lWwrPifKuo\n0fXokKu1Hx5MI5RvBX7Pp2TjXJEE0p3sNi8SsatyY13+SVVq1WbB2AUG6FqGbnC4\nwvBfM8LTG4bpsnY12a34fmtulOmqTP633TPKLq9jWLfkBi17lrhM2fNk403ycaxV\n1Cqbg1bV3LyJVYTMahB82TrVe3Amj9q9MDpisrQP6d9q9tBjp0mFUtjFEuM2cTmD\nthn3dzbFAgMBAAECggEAMNykLUDxsjPFmU5MufxbQL4wagZLZa98uGrfH/G9Kwkd\neSkQJDHJ/oz5f5Ag3vycWG6W45f9eykNw2u/LCyQebzqnrStZJxgfuYf0A+kel23\nqwmlcdNwHNjVgK4zoZN2TOGnHQnWQP/OKIEcMoKbCG30kHnxkQduqSM1PwprNt3p\nis9ZPY13bDl93QGNdpQ/WkVU3Alj4GhYIaIUWXq4mhtbm4EKZ6CSyhvv8po6y7OV\nM95qrIiBEPsTQMEIo1tOW7LgfhDRD7gs7khnAtkJKGI4sjY9Uzx/IvibmuzBTYVl\nJDL3GMjF9UPzbKQIyRGWy7XBUyaTckBWDHSxc8KNoQKBgQD9y+dymLU2jg/Emv6X\n+CzlmhXIOeRGHwO2QAwfhuOWo/zCvrbTGLDNtiDRDGrBXgf7xKzCU7qu1KgClbyr\nHscUSyhqf1Q/6UiznrAqqgR7K4eh1apUMzZznHQY2OYP++Q3QEc6Rc+d1nszHU9o\nprkHmgumsKHmhNTtH30uGoHE5wKBgQDedMdmojUR2OK5krGpIoNyFuQ+wFpCxtTJ\nPyDHDMyKCT/z3J65YzUavxLP3a7tqK8QE7UNjK64ULKbtXU1jj++HinGGCvqDzQI\nQfpMMT91GWrykP1tpUytY26bpdVWHLrTIjcVEA3YnxfqxtKcZkk8LwqZBy9ItBUr\nlYpXnWrFcwKBgQCoK46njqy1A5lLK3D7/gSx91HrpQCvvilVgEcINPdlgDAiUwEO\nC9RL2x0PqGysyMP9fisDcTvIUT0qyVGFChXcSpjzSH/pAYmdC8+r1ZC2lPeAsvX0\naSLxpIABXufDO6PTQJJx+IREEDT+f7N4otEESnzh7TS6bNYycaUfAY1vjQKBgCYx\nfprMdrgduK+L1Bzp5A+OhpmPhO+6G4aB5CrIs8VvWR+RXV8O/WseKyitMv9y2ruz\n5n3xDX5vvHqnaPxM8/y8SQfN1pxVB+XzDfpO6ko8lvQWmKxemQ+b5r2qdzpVrG3b\njgF7xCTRC9YvVLGtjh1bJkKnzSJ6aLgW8K2iRVapAoGAQWyf5ipFC40isOdhlL9O\noAQG1DsLcHwbaU9E2QSirOh5iD32SpAQC2MWCE4R3hTg7j0qGB4Ed+JF3sjrXw1H\nGy85U7jNTTULvk509ykuj11tn+ni+er4fHWb5rdl4w1PVwAKhDmfE0WXLkduLrTI\nk8U8Fsq5GrTAD9qkEIkZcDg=\n-----END PRIVATE KEY-----\n",
+    "client_email": "food-recognition@herv-ai-1688377829094.iam.gserviceaccount.com",
+    "client_id": "113786682395678232247",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/food-recognition%40herv-ai-1688377829094.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+}

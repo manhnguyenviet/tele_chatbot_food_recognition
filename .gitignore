@@ -1,0 +1,8 @@
+# files
+.python-version
+.env
+.DS_Store
+
+# folders
+logs
+__pycache__
