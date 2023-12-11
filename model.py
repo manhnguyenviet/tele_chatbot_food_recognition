@@ -1,4 +1,4 @@
-import os, sys, argparse
+import os, sys, argparse, logging
 import cv2
 import imghdr
 import numpy as np
@@ -7,11 +7,39 @@ import tensorflow as tf
 
 from keras.metrics import Precision, Recall, BinaryAccuracy
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, Rescaling
 from keras.models import load_model
 
+logger = logging.getLogger(__name__)
 
+
+# input parameters for running file
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--test_file",
+    type=str,
+    required=False,
+    help="File used to test the model",
+)
+parser.add_argument(
+    "--train_dir",
+    type=str,
+    required=False,
+    help="Files used to train the model",
+)
+parser.add_argument(
+    "--val_dir",
+    type=str,
+    required=False,
+    help="Files used to validate the model",
+)
+parser.add_argument(
+    "-o",
+    "--overwrite",
+    type=str,
+    required=False,
+    help="Name of the folder contains existing model to be overwritten",
+)
 parser.add_argument(
     "-e",
     "--epochs",
@@ -19,141 +47,150 @@ parser.add_argument(
     required=False,
     help="Number of epochs to train",
 )
-parser.add_argument(
-    "-d",
-    "--dir",
-    type=str,
-    help="Path to the training dataset",
-)
-parser.add_argument(
-    "-nt",
-    "--not_train",
-    action="store_true",
-    help="Use this parameter to not train the model",
-)
-parser.add_argument(
-    "--evaluate",
-    action="store_true",
-    help="Use this parameter to not train the model",
-)
-
-default_data_dir = "food_data/train_set"
-default_epochs = 10
 args = parser.parse_args()
-training_data_dir = args.dir or default_data_dir
-training_epochs = args.epochs or default_epochs
-not_train = args.not_train
-evaluate = args.evaluate
-
-existed_model_file_dir = "model/food_recognition.h5"
-img_file_type = ["jpg"]
-log_dir = "logs"
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
-optimizer="adam" 
-metrics=["accuracy"]
 
 
-def process_and_show_chart(fit_result, content_type=""):
-    """
-    Process the trained result from the training process and show the chart
-    about accuracy and loss
-    """
-    if not content_type:
-        return
+train_dir = args.train_dir or "food_data/food-101-tiny/train"
+val_dir = args.val_dir or "food_data/food-101-tiny/val"
 
-    fig = plt.figure()
-    plt.plot(fit_result.history[content_type], color="teal", label=content_type)
-    plt.plot(
-        fit_result.history[f"val_{content_type}"],
-        color="orange",
-        label=f"val_{content_type}",
-    )
-    fig.suptitle(content_type.capitalize(), fontsize=20)
-    plt.legend(loc="upper left")
-    plt.show()
+# img information and format for training
+batch_size = 32
+img_height = 180
+img_width = 180
 
 
-def evaluate_result(model, test_data):
-    """
-    Using this function to evaluate the result from training the model.
-    Should run every time the model is trained
-    Especially useful in case user wants to make some charts about loss and accuracy
-    when training the model
-    """
-    pre = Precision()
-    re = Recall()
-    acc = BinaryAccuracy()
+# load data from directory
+train_ds = tf.keras.utils.image_dataset_from_directory(
+    train_dir,
+    validation_split=0.1,
+    subset="training",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size,
+)
 
-    for batch in test_data.as_numpy_iterator():
-        X, y = batch
-        yhat = model.predict(X)
-        pre.update_state(y, yhat)
-        re.update_state(y, yhat)
-        acc.update_state(y, yhat)
-    print(pre.result(), re.result(), acc.result())
-    return pre, re, acc
+val_ds = tf.keras.utils.image_dataset_from_directory(
+    val_dir,
+    validation_split=0.9,
+    subset="validation",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size,
+)
 
-
-def predict(model, img_dir):
-    img = cv2.imread(img_dir)
-    resize = tf.image.resize(img, (256, 256))
-    yhat = model.predict(np.expand_dims(resize / 255, 0))
+# get all class names (names of all subfolders from traing directory)
+class_names = train_ds.class_names
+num_classes = len(class_names)
 
 
-# create and config model
-try:
-    model = load_model(existed_model_file_dir)
-except Exception:
-    # handle case first time run and there's no existed model
-    model = Sequential(
-        [
-            Conv2D(16, (3, 3), 1, activation="relu", input_shape=(256, 256, 3)),
-            MaxPooling2D(),
-            Conv2D(32, (3, 3), 1, activation="relu"),
-            MaxPooling2D(),
-            Conv2D(16, (3, 3), 1, activation="relu"),
-            MaxPooling2D(),
-            Flatten(),
-            Dense(256, activation="relu"),
-            Dense(1, activation="sigmoid"),
-        ]
-    )
-    model.compile(optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=metrics)
-
-# load data
-data = tf.keras.utils.image_dataset_from_directory(training_data_dir)
-# process and scale data
-data_iterator = data.as_numpy_iterator()
-batch = data_iterator.next()
-fig, ax = plt.subplots(ncols=4, figsize=(20, 20))
-for idx, img in enumerate(batch[0][:4]):
-    ax[idx].imshow(img.astype(int))
-    ax[idx].title.set_text(batch[1][idx])
-# scale data
-data = data.map(lambda x, y: (x / 255, y))
-data.as_numpy_iterator().next()
-
-# split data
-train_size = int(len(data) * 0.7) # 70% of the images is used for training
-val_size = int(len(data) * 0.2) # 20% of 30% remain images is used for validating
-test_size = int(len(data) * 0.1) # 10% remain images is used for testing
-
-train = data.take(train_size)
-val = data.skip(train_size).take(val_size)
-test = data.skip(train_size + val_size).take(test_size)
+# for image_batch, labels_batch in train_ds:
+#     print(image_batch.shape)
+#     print(labels_batch.shape)
+#     break
 
 
-if not not_train:
-    fit_result = model.fit(
-        train, epochs=training_epochs, validation_data=val, callbacks=[tensorboard_callback]
-    )
+AUTOTUNE = tf.data.AUTOTUNE
+train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+normalization_layer = Rescaling(1.0 / 255)
+normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
+image_batch, labels_batch = next(iter(normalized_ds))
 
-    # save or update the model
-    model.save(os.path.join('models','food_recognition.h5'))
 
-    if evaluate:
-        evaluate_result(model, test)
+# declare model
+model = Sequential(
+    [
+        Rescaling(1.0 / 255, input_shape=(img_height, img_width, 3)),
+        Conv2D(16, 3, padding="same", activation="relu"),
+        MaxPooling2D(),
+        Conv2D(32, 3, padding="same", activation="relu"),
+        MaxPooling2D(),
+        Conv2D(64, 3, padding="same", activation="relu"),
+        MaxPooling2D(),
+        Flatten(),
+        Dense(128, activation="relu"),
+        Dense(num_classes),
+    ]
+)
+
+
+# compile model with configs
+model.compile(
+    optimizer="adam",
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=["accuracy"],
+)
+# show the model summary statistics
+model.summary()
+
+
+# train
+epochs=3
+history = model.fit(
+  train_ds,
+  validation_data=val_ds,
+  epochs=epochs
+)
+
+
+# save the model
+overwrite = False
+saved_folder_dir = "saved_models"
+save_model_prefix = "food_recog_v"
+if args.overwrite:
+    overwrite = True
+    save_dir = f"{saved_folder_dir}/{args.overwrite}"
 else:
-    fit_result = None
+    saved_subfolders = [f.name for f in os.scandir(saved_folder_dir) if f.is_dir()]
+    saved_subfolders.sort()
+    version = int(saved_subfolders[-1].strip(save_model_prefix)) + 1
+    save_dir = f"{saved_folder_dir}/{save_model_prefix}{version}"
 
-Model = model # model instance for importing and using
+model.save(save_dir, overwrite=overwrite)
+print("Model saved successfully")
+
+
+# Visualize training results
+# TODO: should also save the loss and accuracy to json file, 
+# and use that to select the model to use in main.py
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+epochs_range = range(epochs)
+
+plt.figure(figsize=(8, 8))
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, acc, label='Training Accuracy')
+plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+plt.legend(loc='lower right')
+plt.title('Training and Validation Accuracy')
+
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, loss, label='Training Loss')
+plt.plot(epochs_range, val_loss, label='Validation Loss')
+plt.legend(loc='upper right')
+plt.title('Training and Validation Loss')
+plt.savefig(f"{save_dir}/train_result.png") # save the training result image
+plt.show() # show the training and validation results as a chart figure, uncomment if needed
+
+
+
+# Predict on new data
+img_path = args.test_file or "img/test_imgs/Apple_pie.jpg"
+img = tf.keras.utils.load_img(
+    img_path, target_size=(img_height, img_width)
+)
+img_array = tf.keras.utils.img_to_array(img)
+img_array = tf.expand_dims(img_array, 0) # Create a batch
+
+predictions = model.predict(img_array)
+score = tf.nn.softmax(predictions[0])
+print(f"Class names: {class_names}")
+print(f"Score: {score}")
+print(
+    f"This image most likely belongs to {class_names[np.argmax(score)]}"
+    f" with a {round(100 * np.max(score), 4)} percent confidence."
+)
