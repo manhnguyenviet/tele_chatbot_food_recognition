@@ -12,11 +12,11 @@ from telegram.ext import (
     ContextTypes,
     Updater,
 )
+from keras.models import load_model
 
 from settings import TELEGRAM_BOT_API_KEY, TELEGRAM_BOT_LINK
 from food_recognition import recognize_food
-from model import (
-    Model,
+from old_model import (
     process_and_show_chart,
     evaluate_result,
     predict,
@@ -78,6 +78,13 @@ async def trained_model_handle_photo(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     reply_text = ""
+    # TODO: implement logic here
+    model = load_model("saved_models/food_recog_v1")
+    file = await context.bot.get_file(update.message.photo[-1].file_id)
+    """
+    should save the image in path, then use it to process the prediction
+    """
+    file.download_to_drive()
     await context.bot.send_message(chat_id=update.effective_chat.id, text=reply_text)
 
 
