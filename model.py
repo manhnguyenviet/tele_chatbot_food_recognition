@@ -1,4 +1,4 @@
-import os, sys, argparse, logging
+import os, sys, argparse, logging, json
 import cv2
 import imghdr
 import numpy as np
@@ -125,7 +125,7 @@ model.summary()
 
 
 # train
-epochs=3
+epochs= args.epochs or 3
 history = model.fit(
   train_ds,
   validation_data=val_ds,
@@ -137,13 +137,17 @@ history = model.fit(
 overwrite = False
 saved_folder_dir = "saved_models"
 save_model_prefix = "food_recog_v"
+statistic_file_name = "training_statistics.json"
 if args.overwrite:
     overwrite = True
     save_dir = f"{saved_folder_dir}/{args.overwrite}"
 else:
     saved_subfolders = [f.name for f in os.scandir(saved_folder_dir) if f.is_dir()]
     saved_subfolders.sort()
-    version = int(saved_subfolders[-1].strip(save_model_prefix)) + 1
+    if not saved_subfolders:
+        version = 1
+    else:
+        version = int(saved_subfolders[-1].strip(save_model_prefix)) + 1
     save_dir = f"{saved_folder_dir}/{save_model_prefix}{version}"
 
 model.save(save_dir, overwrite=overwrite)
@@ -158,6 +162,16 @@ val_acc = history.history['val_accuracy']
 
 loss = history.history['loss']
 val_loss = history.history['val_loss']
+
+# save the loss and accuracy
+training_statistics = {
+    "acc": acc,
+    "val_acc": val_acc,
+    "loss": loss,
+    "val_loss": val_loss,
+}
+with open(f"{save_dir}/training_statistics.json", "w") as file:
+    json.dump(training_statistics, file)
 
 epochs_range = range(epochs)
 
