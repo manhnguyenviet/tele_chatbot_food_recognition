@@ -7,7 +7,17 @@ import tensorflow as tf
 
 from keras.metrics import Precision, Recall, BinaryAccuracy
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, Rescaling
+from keras.layers import (
+    Conv2D,
+    MaxPooling2D,
+    Dense,
+    Flatten,
+    Dropout,
+    Rescaling,
+    RandomFlip,
+    RandomRotation,
+    RandomZoom,
+)
 from keras.models import load_model
 
 logger = logging.getLogger(__name__)
@@ -50,13 +60,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-train_dir = args.train_dir or "food_data/food-101-tiny/train"
-val_dir = args.val_dir or "food_data/food-101-tiny/val"
+train_dir = args.train_dir or "food_data/train"
+val_dir = args.val_dir or "food_data/val"
 
 # img information and format for training
 batch_size = 32
-img_height = 180
-img_width = 180
+img_height = 256
+img_width = 256
 
 
 # load data from directory
@@ -98,18 +108,27 @@ image_batch, labels_batch = next(iter(normalized_ds))
 
 
 # declare model
+data_augmentation = Sequential(
+    [
+        RandomFlip("horizontal", input_shape=(img_height, img_width, 3)),
+        RandomRotation(0.1),
+        RandomZoom(0.1),
+    ]
+)
 model = Sequential(
     [
-        Rescaling(1.0 / 255, input_shape=(img_height, img_width, 3)),
+        data_augmentation,
+        Rescaling(1.0 / 255),
         Conv2D(16, 3, padding="same", activation="relu"),
         MaxPooling2D(),
         Conv2D(32, 3, padding="same", activation="relu"),
         MaxPooling2D(),
         Conv2D(64, 3, padding="same", activation="relu"),
         MaxPooling2D(),
+        Dropout(0.2),
         Flatten(),
         Dense(128, activation="relu"),
-        Dense(num_classes),
+        Dense(num_classes, name="outputs"),
     ]
 )
 
@@ -125,12 +144,8 @@ model.summary()
 
 
 # train
-epochs= args.epochs or 3
-history = model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=epochs
-)
+epochs = args.epochs or 3
+history = model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 
 
 # save the model
@@ -155,13 +170,13 @@ print("Model saved successfully")
 
 
 # Visualize training results
-# TODO: should also save the loss and accuracy to json file, 
+# TODO: should also save the loss and accuracy to json file,
 # and use that to select the model to use in main.py
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+acc = history.history["accuracy"]
+val_acc = history.history["val_accuracy"]
 
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+loss = history.history["loss"]
+val_loss = history.history["val_loss"]
 
 # save the loss and accuracy
 training_statistics = {
@@ -177,28 +192,25 @@ epochs_range = range(epochs)
 
 plt.figure(figsize=(8, 8))
 plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
+plt.plot(epochs_range, acc, label="Training Accuracy")
+plt.plot(epochs_range, val_acc, label="Validation Accuracy")
+plt.legend(loc="lower right")
+plt.title("Training and Validation Accuracy")
 
 plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.savefig(f"{save_dir}/train_result.png") # save the training result image
-plt.show() # show the training and validation results as a chart figure, uncomment if needed
-
+plt.plot(epochs_range, loss, label="Training Loss")
+plt.plot(epochs_range, val_loss, label="Validation Loss")
+plt.legend(loc="upper right")
+plt.title("Training and Validation Loss")
+plt.savefig(f"{save_dir}/train_result.png")  # save the training result image
+plt.show()  # show the training and validation results as a chart figure, uncomment if needed
 
 
 # Predict on new data
 img_path = args.test_file or "img/test_imgs/Apple_pie.jpg"
-img = tf.keras.utils.load_img(
-    img_path, target_size=(img_height, img_width)
-)
+img = tf.keras.utils.load_img(img_path, target_size=(img_height, img_width))
 img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
+img_array = tf.expand_dims(img_array, 0)  # Create a batch
 
 predictions = model.predict(img_array)
 score = tf.nn.softmax(predictions[0])
