@@ -1,29 +1,30 @@
-import os, sys, argparse, logging, json
-import cv2
-import imghdr
-import numpy as np
-from matplotlib import pyplot as plt
-import tensorflow as tf
+import argparse
+import json
+import logging
+import os
 
-from keras.metrics import Precision, Recall, BinaryAccuracy
-from keras.models import Sequential
+import numpy as np
+import tensorflow as tf
 from keras.layers import (
     Conv2D,
-    MaxPooling2D,
     Dense,
-    Flatten,
     Dropout,
-    Rescaling,
+    Flatten,
+    MaxPooling2D,
     RandomFlip,
     RandomRotation,
     RandomZoom,
+    Rescaling,
 )
-from keras.models import load_model
+from keras.models import Sequential
+from matplotlib import pyplot as plt
 
 logger = logging.getLogger(__name__)
 
 
 # input parameters for running file
+# should be used to for training on local machine only
+# should be removed or commented when running on Google Colab
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--test_file",
@@ -157,7 +158,9 @@ if args.overwrite:
     overwrite = True
     save_dir = f"{saved_folder_dir}/{args.overwrite}"
 else:
-    saved_subfolders = [f.name for f in os.scandir(saved_folder_dir) if f.is_dir()]
+    saved_subfolders = [
+        f.name for f in os.scandir(saved_folder_dir) if f.is_dir()
+    ]
     saved_subfolders.sort()
     if not saved_subfolders:
         version = 1

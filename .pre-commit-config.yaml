@@ -1,0 +1,25 @@
+default_language_version:
+  python: python3.10
+
+fail_fast: false
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 11cdc8d8201091a19ff1c28f7b7c75c3691954ad
+  hooks:
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+    - id: debug-statements
+    - id: no-commit-to-branch
+    - id: check-merge-conflict
+
+- repo: https://github.com/pycqa/bandit
+  rev: 1.7.0
+  hooks:
+    - id: bandit
+      args: ['-iii', '-ll']
+
+- repo: https://github.com/4Catalyzer/fourmat
+  rev: v0.11.1
+  hooks:
+    - id: fourmat
