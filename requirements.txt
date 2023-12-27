@@ -3,7 +3,7 @@ requests==2.31.0
 error-links==0.3.0
 numpy==1.26.1
 matplotlib==3.8.1
-tensorflow==2.14.0
+tensorflow<=2.11.0
 google-cloud-vision==3.4.5
 opencv-python==4.8.1.78
 ipython==8.12.0
@@ -11,3 +11,4 @@ tensorflow_datasets==4.9.3
 pyyaml==6.0.1
 h5py==3.10.0
 pre-commit==3.6.0
+openai==1.6.1

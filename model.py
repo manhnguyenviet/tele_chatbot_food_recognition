@@ -14,7 +14,7 @@ from keras.layers import (
     RandomFlip,
     RandomRotation,
     RandomZoom,
-    Rescaling,
+    Rescaling, BatchNormalization
 )
 from keras.models import Sequential
 from matplotlib import pyplot as plt
@@ -61,8 +61,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-train_dir = args.train_dir or "food_data/train"
-val_dir = args.val_dir or "food_data/val"
+train_dir = args.train_dir or "food_data/tiny/train"
+val_dir = args.val_dir or "food_data/tiny/val"
 
 # img information and format for training
 batch_size = 32
@@ -110,26 +110,23 @@ image_batch, labels_batch = next(iter(normalized_ds))
 
 # declare model
 data_augmentation = Sequential(
-    [
-        RandomFlip("horizontal", input_shape=(img_height, img_width, 3)),
+    [ 
+        RandomFlip("horizontal"), 
         RandomRotation(0.1),
-        RandomZoom(0.1),
     ]
 )
+
 model = Sequential(
     [
         data_augmentation,
-        Rescaling(1.0 / 255),
-        Conv2D(16, 3, padding="same", activation="relu"),
+        Rescaling(1.0/255),
+        Conv2D(16, 3, padding='same', activation='relu'),
+        BatchNormalization(),
         MaxPooling2D(),
-        Conv2D(32, 3, padding="same", activation="relu"),
-        MaxPooling2D(),
-        Conv2D(64, 3, padding="same", activation="relu"),
-        MaxPooling2D(),
-        Dropout(0.2),
+        Dropout(0.1),
         Flatten(),
-        Dense(128, activation="relu"),
-        Dense(num_classes, name="outputs"),
+        Dense(128, activation='relu'), 
+        Dense(num_classes, activation='softmax')
     ]
 )
 
@@ -173,7 +170,7 @@ print("Model saved successfully")
 
 
 # Visualize training results
-# TODO: should also save the loss and accuracy to json file,
+# should also save the loss and accuracy to json file,
 # and use that to select the model to use in main.py
 acc = history.history["accuracy"]
 val_acc = history.history["val_accuracy"]
