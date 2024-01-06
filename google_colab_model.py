@@ -153,19 +153,3 @@ plt.legend(loc="upper right")
 plt.title("Training and Validation Loss")
 plt.savefig(f"{save_dir}/train_result.png")  # save the training result image
 plt.show()  # show the training and validation results as a chart figure, uncomment if needed
-
-
-# Predict on new data
-# img_path = args.test_file or "img/test_imgs/Apple_pie.jpg"
-# img = tf.keras.utils.load_img(img_path, target_size=(img_height, img_width))
-# img_array = tf.keras.utils.img_to_array(img)
-# img_array = tf.expand_dims(img_array, 0)  # Create a batch
-
-# predictions = model.predict(img_array)
-# score = tf.nn.softmax(predictions[0])
-# print(f"Class names: {class_names}")
-# print(f"Score: {score}")
-# print(
-#     f"This image most likely belongs to {class_names[np.argmax(score)]}"
-#     f" with a {round(100 * np.max(score), 4)} percent confidence."
-# )
