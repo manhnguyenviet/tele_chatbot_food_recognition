@@ -1,31 +1,29 @@
-import logging, os
-import numpy as np
-import cv2
+import logging
+import os
 
-from io import BytesIO
 from telegram import Update
 from telegram.ext import (
-    filters,
-    MessageHandler,
     ApplicationBuilder,
     CommandHandler,
     ContextTypes,
+    MessageHandler,
+    filters,
 )
 
 from settings import TELEGRAM_BOT_API_KEY
-from food_recognition import recognize_food
 from utils import (
-    load_existed_model,
-    predict,
-    search_recipe_instruction,
     format_dish_name,
+    img_prediction,
+    load_existed_model,
+    search_recipe_instruction,
 )
-
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
+
+model = load_existed_model("model.10-0.60.hdf5")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -41,7 +39,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     /search_instruction: Search for making instruction of given dish name
     /help: show help commands
     /train: Train the bot
-    
+
     """
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
 
@@ -49,28 +47,6 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id, text="This is Echo"
-    )
-
-
-async def google_cloud_vision_handle_photo(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    file = await context.bot.get_file(update.message.photo[-1].file_id)
-    biyte_io_file = BytesIO(await file.download_as_bytearray())
-    file_bytes = np.asarray(bytearray(biyte_io_file.read()), dtype=np.uint8)
-
-    # decode to get the image
-    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-
-    # because cv2 using BGR color space,
-    # we need to convert the image from RGB to BGR
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-    # recognize the food inside the image
-    food_name, percent_match = recognize_food(img)
-    reply_text = f"The food is {food_name} with {percent_match}% confidence"
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=reply_text
     )
 
 
@@ -84,15 +60,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         img_path = "tele_img.jpg"
         await file.download_to_drive(img_path)
 
-        model = load_existed_model()
-        result = predict(model, img_path)
+        result = img_prediction(model, img_path)
 
-        dish_name = result["dish_name"]
-        rounded_score = result["rounded_score"]
+        best_pred = result["best_pred"]
+        dish_name = result["label"]
+        pred = best_pred
 
         text = (
             f"This image is most likely belongs to {dish_name} with"
-            f" {rounded_score}% confidence"
+            f" {pred}% confidence"
         )
 
         # remove temp img
@@ -132,7 +108,7 @@ async def search_instruction(
         text = "No dish detected. Please provide a dish to search."
         await context.bot.send_message(
             chat_id=update.effective_chat.id, text=text
-        )    
+        )
         return
 
     search_noti = (
@@ -160,7 +136,6 @@ def main():
         "search_instruction", search_instruction
     )
     help_handler = CommandHandler("help", help)
-    # help_handler = CommandHandler("help", help)
     photo_handler = MessageHandler(filters.PHOTO, handle_photo)
 
     # add the handlers to the bot

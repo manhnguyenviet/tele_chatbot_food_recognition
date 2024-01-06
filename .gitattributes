@@ -5,3 +5,4 @@ saved_models/food_recog_v10/variables/variables.data-00000-of-00001 filter=lfs d
 model.01-1.64.hdf5 filter=lfs diff=lfs merge=lfs -text
 model.02-0.80.hdf5 filter=lfs diff=lfs merge=lfs -text
 model.03-0.65.hdf5 filter=lfs diff=lfs merge=lfs -text
+model.10-0.60.hdf5 filter=lfs diff=lfs merge=lfs -text
