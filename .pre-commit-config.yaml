@@ -10,7 +10,6 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
     - id: debug-statements
-    - id: no-commit-to-branch
     - id: check-merge-conflict
 
 - repo: https://github.com/pycqa/bandit
