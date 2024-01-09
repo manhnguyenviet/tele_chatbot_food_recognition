@@ -23,7 +23,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-model = load_existed_model("model.10-0.60.hdf5")
+model = load_existed_model()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
