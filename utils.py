@@ -88,7 +88,10 @@ class Rescaling(tf.keras.layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-def load_existed_model(version):
+def load_existed_model(version=""):
+    if version:
+        return load_model(version, compile=False)
+
     try:
         saved_folder_dir = "saved_models"
         statistic_file_name = "training_statistics.json"
