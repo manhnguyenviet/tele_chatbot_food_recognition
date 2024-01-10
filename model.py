@@ -16,6 +16,7 @@ from keras.layers import (
     RandomRotation,
     Rescaling,
 )
+from keras.utils import image_dataset_from_directory
 from keras.models import Sequential
 from matplotlib import pyplot as plt
 
@@ -65,13 +66,15 @@ train_dir = args.train_dir or "food_data/tiny/train"
 val_dir = args.val_dir or "food_data/tiny/val"
 
 # img information and format for training
-batch_size = 32
+batch_size = 3
 img_height = 256
 img_width = 256
 
+input_shape = (None, img_height, img_width, batch_size)
+
 
 # load data from directory
-train_ds = tf.keras.utils.image_dataset_from_directory(
+train_ds = image_dataset_from_directory(
     train_dir,
     validation_split=0.1,
     subset="training",
@@ -80,7 +83,7 @@ train_ds = tf.keras.utils.image_dataset_from_directory(
     batch_size=batch_size,
 )
 
-val_ds = tf.keras.utils.image_dataset_from_directory(
+val_ds = image_dataset_from_directory(
     val_dir,
     validation_split=0.9,
     subset="validation",
@@ -116,19 +119,20 @@ data_augmentation = Sequential(
     ]
 )
 
-model = Sequential(
-    [
-        data_augmentation,
-        Rescaling(1.0 / 255),
-        Conv2D(64, (3, 3), padding="same", activation="relu"),
-        BatchNormalization(),
-        MaxPooling2D(),
-        Dropout(0.1),
-        Flatten(),
-        Dense(128, activation="relu"),
-        Dense(num_classes, activation="softmax"),
-    ]
-)
+model = Sequential([
+  data_augmentation,
+  Rescaling(1./255),
+  Conv2D(16, 3, padding='same', activation='relu'),
+  MaxPooling2D(),
+  Conv2D(32, 3, padding='same', activation='relu'),
+  MaxPooling2D(),
+  Conv2D(64, 3, padding='same', activation='relu'),
+  MaxPooling2D(),
+  Dropout(0.2),
+  Flatten(),
+  Dense(128, activation='relu'),
+  Dense(num_classes, name="outputs")
+])
 
 
 # compile model with configs
@@ -138,6 +142,7 @@ model.compile(
     metrics=["accuracy"],
 )
 # show the model summary statistics
+model.build(input_shape)
 model.summary()
 
 
@@ -204,19 +209,3 @@ plt.legend(loc="upper right")
 plt.title("Training and Validation Loss")
 plt.savefig(f"{save_dir}/train_result.png")  # save the training result image
 plt.show()  # show the training and validation results as a chart figure, uncomment if needed
-
-
-# Predict on new data
-img_path = args.test_file or "img/test_imgs/Apple_pie.jpg"
-img = tf.keras.utils.load_img(img_path, target_size=(img_height, img_width))
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0)  # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-print(f"Class names: {class_names}")
-print(f"Score: {score}")
-print(
-    f"This image most likely belongs to {class_names[np.argmax(score)]}"
-    f" with a {round(100 * np.max(score), 4)} percent confidence."
-)
